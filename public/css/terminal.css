@@ -1,0 +1,59 @@
+body {
+  background-color: #300a24;
+}
+
+.terminal {
+  font-family: 'Ubuntu Mono', sans-serif;
+  font-size: 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+.terminalOutput {
+  font-family: 'Ubuntu Mono', sans-serif;
+  font-size: 20px;
+  display: flex;
+  flex-direction: row;
+}
+
+.colon {
+  color: white;
+}
+
+.path {
+  color: #578ac4;
+}
+
+.dollarsign {
+  color: white;
+}
+
+.user {
+  color: #67e427;
+}
+
+.computer {
+  color: #67e427;
+}
+
+.textInput {
+  padding-left: 10px;
+  border: 0;
+  width: 900px;
+  outline: none;
+  color: white;
+  background-color: #300a24;
+}
+
+.file {
+  color: white;
+  padding-right: 10px;
+}
+
+.directory {
+  color: #578ac4;
+  padding-right: 10px;
+}
+ 
+
+ /*# sourceMappingURL= terminal.css.map */

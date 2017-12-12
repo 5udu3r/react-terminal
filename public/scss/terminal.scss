@@ -1,0 +1,60 @@
+$ubuntu_purple : rgb(48, 10, 36);
+$terminal_green: rgb(103,228,39);
+$directory_blue: rgb(87,138,196);
+
+body {
+    background-color: $ubuntu_purple;
+}
+.terminal {
+    font-family: 'Ubuntu Mono', sans-serif;
+    font-size: 20px;
+    display: flex;
+    flex-direction: row;
+}
+
+.terminalOutput {
+    font-family: 'Ubuntu Mono', sans-serif;
+    font-size: 20px;
+    display: flex;
+    flex-direction: row;
+}
+
+.colon {
+    color: white;
+}
+
+.path {
+    color: $directory_blue;
+}
+
+.dollarsign {
+    color: white;
+}
+
+.user {
+    color: $terminal_green;
+}
+
+.computer {
+    color: $terminal_green;
+}
+
+.textInput {
+    padding-left: 10px;
+    border: 0;
+    width: 900px;
+    outline: none;
+    color: white;
+    background-color: $ubuntu_purple;
+}
+
+.file {
+    color: white;
+    padding-right: 10px;
+}
+
+.directory {
+    color: $directory_blue;
+    padding-right: 10px;
+}
+    
