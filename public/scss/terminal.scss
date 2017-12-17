@@ -1,20 +1,23 @@
 $ubuntu_purple : rgb(48, 10, 36);
 $terminal_green: rgb(103,228,39);
 $directory_blue: rgb(87,138,196);
+$font-size : 18px;
 
 body {
     background-color: $ubuntu_purple;
 }
 .terminal {
+    padding-left: 5px;
     font-family: 'Ubuntu Mono', sans-serif;
-    font-size: 20px;
+    font-size: $font-size;
     display: flex;
     flex-direction: row;
 }
 
 .terminalOutput {
+    padding-left: 5px;
     font-family: 'Ubuntu Mono', sans-serif;
-    font-size: 20px;
+    font-size: $font-size;
     display: flex;
     flex-direction: row;
 }
@@ -53,7 +56,12 @@ body {
     padding-right: 10px;
 }
 
-.directory {
+.text {
+    color: white;
+    white-space: pre;
+}
+
+.dir {
     color: $directory_blue;
     padding-right: 10px;
 }
