@@ -4,6 +4,7 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import {input} from '../../actions/actions';
 
+var historyIndex = 0;
 
 class Terminal extends React.Component{
     cmdTree = {
@@ -93,8 +94,12 @@ class Terminal extends React.Component{
         
     }
 
+
+
     handleSubmit(e){
         const ENTER = 13;
+        const UP_ARROW = 38;
+        const DOWN_ARROW = 40;
 
         if (e.keyCode === ENTER)
         {
@@ -136,8 +141,23 @@ class Terminal extends React.Component{
 
                     this.props.input(userInput, cmd, flgs, dir, "NO_DIR");
                 }
+            historyIndex++;
             e.target.value = ''; // Clear cursor
         }
+        
+        // Use arrow keys to toggle through command history
+        if (e.keyCode === UP_ARROW) {
+            historyIndex--;
+            e.target.value = this.props.history[historyIndex].userInput;
+        } else if (e.keyCode === DOWN_ARROW) {
+            if(historyIndex === this.props.history.length-1){
+                e.target.value = ''; 
+            } else {
+                historyIndex++;
+                e.target.value = this.props.history[historyIndex].userInput;
+            }
+        }
+
     }
 
 
@@ -288,6 +308,7 @@ function mapStateToProps(state){
     return {
        path: state.terminal.path,
        dirTree: state.terminal.dirTree,
+       history: state.terminal.history,
        prevInputs: state.terminal.prevInputs
     };
 }
