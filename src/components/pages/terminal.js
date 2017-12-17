@@ -15,7 +15,9 @@ class Terminal extends React.Component{
 
         ls: {
             "-a" : "List all entries including those starting with a dot"
-        }
+        },
+
+        clear: true
     }
 
     fileFormatTree = {
@@ -205,7 +207,33 @@ class Terminal extends React.Component{
                             });
                         }
                 }
+            } else {
+                switch (input.err) {
+                    case "NO_CMD":
+                        prevOutputJSX = (
+                            <div className="text">
+                            -bash: {input.cmd}: command not found
+                            </div>
+                        );
+                        break;
+                    case "NO_FLG":
+                        prevOutputJSX = (
+                            <div className="text">
+                            -bash: {input.cmd}: {input.flgs}: invalid option
+                            </div>
+                        )
+                        break;
+                    case "NO_DIR":
+                        prevOutputJSX = (
+                            <div className="text">
+                            -bash: {input.cmd}: {input.dir}: No such file or directory 
+                            </div>
+                        )
+                        break;
+                }
             }
+
+
             if(input.userInput){
                 prevInputJSX = (
                     <div className="terminalOutput">
