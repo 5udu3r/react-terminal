@@ -53,8 +53,38 @@ Queen's University, Canada`
 }
 
 const blankLine = {
+    // Stores the current directory. terminal.js renders this property as the 
+    // current working directory in the terminal.
     path: ['~'],
+
+    // Stores the current directory tree. Commands like rm and mkdir can change
+    // this tree.
     dirTree,
+
+    /* 
+        history and prevInputs stores all previous commands given. terminal.js 
+        uses prevInputs to render the previous inputs. 
+        The 'clear' command reinitializes prevInputs to []. history is used to
+        toggle the command history using the up and down arrow keys.
+         
+        Both arrays store the following object:
+            {userInput, cmd, flgs, dir, err, path}
+
+        userInput   raw unparsed command submitted by the user. Used to 
+                    render the previous user commands.
+        cmd         constructed by splitting the userInput on ' ' and taking the
+                    first element of the array
+        flgs        constructed in the same way as cmd but the array is filtered
+                    for the commands starting with '-'
+        dir         the remaining elements after userInput has been split into
+                    cmd and flgs
+        err         has a values of false, NO_CMD, NO_FLG, NO_DIR. terminal.js
+                    checks if there is an error and assigns one of these values.
+        path        directory path when the command was given. Necessary for 
+                    rendering the path in previous terminal inputs.
+        
+    */
+    history: [],
     prevInputs: [] 
 };
 
@@ -108,6 +138,7 @@ function terminalReducer(state = blankLine, action){
     const changePathOrDirTree = {
         cd: true,
         ls: false,
+        clear: false
     }
 
 
@@ -131,6 +162,11 @@ function terminalReducer(state = blankLine, action){
                 }
               }
             }
+          case "clear":
+            newState = {
+                ...newState,
+                prevInput: []
+            }
           case "rm":
             if(flgs[0] === undefined){
             }
@@ -140,7 +176,8 @@ function terminalReducer(state = blankLine, action){
 
     newState = {
         ...newState,
-        prevInputs: newState.prevInputs.concat(currInput) 
+        history: newState.prevInputs.concat(currInput),
+        prevInputs: newState.prevInputs.concat(currInput)
     }
 
     return newState;
