@@ -2,21 +2,93 @@
 import React from 'react';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
-import {ls, cd, clear} from '../../actions/actions';
+import {input} from '../../actions/actions';
+
 
 class Terminal extends React.Component{
-    checkPath(path){
-        const totalPath = this.props.directory.concat(path.split('/'));
-        let tree = this.props.directoryTree
+    cmdTree = {
+        cd: {
+            undefined : "Go to root",
+            ".."      : "Move up one directory",
+            "-"       : "Move to previous directory"
+        },
+
+        ls: {
+            "-a" : "List all entries including those starting with a dot"
+        }
+    }
+
+    fileFormatTree = {
+        'txt': 'text',
+    }
+
+    hiddenDir = {
+        '..': true,
+        '.' : true 
+    }
+
+    searchTree(treeToSearch, path){
+        let tree = {...treeToSearch};
         let isValidPath = true;
-        totalPath.forEach(pathElem => {
-            if(tree[pathElem] != undefined){
-                tree = tree[pathElem];
+        path.forEach(elem=> {
+            if(tree[elem] != undefined){
+                tree = tree[elem];
             } else {
                 isValidPath = false;
             }
         })
         return isValidPath;
+    }
+
+    checkCmd(cmd) {
+        return this.cmdTree[cmd];
+    }
+
+    checkFlgs(cmd, flgs){
+        var cmdTree = this.cmdTree;
+        var isValidPath = false;
+
+        const path = [cmd].concat(flgs);
+
+        isValidPath = this.searchTree(cmdTree, path);
+
+        return isValidPath;
+    }
+
+    checkDir(dir){
+        const path = this.props.path.concat(dir);
+        let dirTree = this.props.dirTree;
+
+        let isValidPath = this.searchTree(dirTree, path)
+
+        return isValidPath;
+    }
+
+
+    parseArg(arg){
+        var parsedArg = {flgs: [], dir: []};
+        var dirStr;
+
+        for(let flgOrDir of arg) {
+            if(flgOrDir.startsWith('-')){
+                parsedArg.flgs.push(flgOrDir);
+            } else {
+                dirStr = flgOrDir;
+                break;
+            }
+        }
+      
+        if(dirStr){
+            return { 
+                ...parsedArg,
+                dir: parsedArg.dir.concat(dirStr.split('/'))
+            }
+        } else {
+            return {
+                ...parsedArg,
+            }
+        }
+        
     }
 
     handleSubmit(e){
@@ -25,93 +97,150 @@ class Terminal extends React.Component{
         if (e.keyCode === ENTER)
         {
             const userInput = e.target.value;
-            const cmd = userInput.split(' ')[0];
-            
-            switch (cmd) {
-                case "ls":
-                    this.props.ls();
-                    break;
-                case "cd":
-                    const targetDir = userInput.substring(3);
-                    if(this.checkPath(targetDir)){
-                        this.props.cd(targetDir);
-                    } else {
-                        console.log("ERROR 405");
-                    }
-                    break;
-                case "clear":
-                    this.props.clear();
-            }
+            const userInputArr = userInput.split(' ');
+            // A user input line contains a command (cmd) and an argument (arg)
+            // seperated by a space
+            const cmd = userInputArr[0];
+            const arg = userInputArr.slice(1, userInputArr.length);
+
+            // The argument contains flags (flgs) and a target directory (dir).
+
+            // Parse arg into flgs and dir
+            const parsedArg = this.parseArg(arg);
+
+            const flgs = parsedArg.flgs;
+            const dir  = parsedArg.dir;
+
+            // Check if there is an error in the command
+            var err;
+
+                if (
+                    this.checkCmd(cmd) && 
+                    this.checkFlgs(cmd, flgs) && 
+                    this.checkDir(dir)
+                ){
+
+                    this.props.input(userInput, cmd, flgs, dir, false);
+
+                } else if(!this.checkCmd(cmd)) {
+
+                    this.props.input(userInput, cmd, flgs, dir, "NO_CMD");
+
+                } else if(!this.checkFlgs(cmd,flgs)){
+
+                    this.props.input(userInput, cmd, flgs, dir, "NO_FLG");
+
+                } else if(!this.checkDir(dir)){
+
+                    this.props.input(userInput, cmd, flgs, dir, "NO_DIR");
+                }
+            e.target.value = ''; // Clear cursor
         }
     }
 
-    subDirArr(){
-        const directory = this.props.directory;
-        const directoryTree = this.props.directoryTree;
 
-        let currDirTree = directoryTree[directory[0]];
-
-        for(var i = 1; i<directory.length; i++)
+    subDirs(path){
+        let dirTree = {...this.props.dirTree};
+        for(let dir of path)
         {
-            currDirTree = currDirTree[directory[i]];
+            dirTree = dirTree[dir];
         }
 
-        let subDirArr = [];
-        Object.keys(currDirTree).forEach(function(key){
-            if(currDirTree[key] == 'txt'){
-                subDirArr.push(key+'.txt');
+        let subDirs = [];
+        Object.keys(dirTree).forEach(function(dir){
+            if(typeof dirTree[dir] === 'string'){
+                subDirs.push(dir);
             } else {
-                subDirArr.push(key);
+                subDirs.push(dir);
             }
         })
-        return subDirArr;
+        return subDirs;
     }
 
     render(){
-        const history = this.props.history.map(cmd => {
-                return (
-                    <div className="terminal">
+        let prevLinesJSX;
+        prevLinesJSX = this.props.prevInputs.map(input => {
+            let prevInputJSX;
+            let prevOutputJSX;
+            if (!input.err){
+                switch (input.cmd) {
+                    case "ls":
+                        for(let flg of input.flgs){
+                            switch(flg) {
+                                case "-a":
+                                    prevOutputJSX = this.subDirs(input.path).map(dir => {
+                                        if(dir.endsWith('.txt')){
+                                            return (
+                                                <div className="file">
+                                                    {dir} 
+                                                </div>
+                                            )
+                                        } else {
+                                            return (
+                                                <div className="dir">
+                                                    {dir}
+                                                </div>
+                                            )
+                                        }
+                                    });
+                            }
+                        }
+                        // If there were no flags, print directories except for
+                        // hidden ones
+                        if(!prevOutputJSX){
+                            prevOutputJSX = this.subDirs(input.path).map(dir => {
+                                if(dir.endsWith('.txt')){
+                                    return (
+                                        <div className="file">
+                                            {dir} 
+                                        </div>
+                                    )
+                                } else if (!this.hiddenDir[dir]){
+                                    return (
+                                        <div className="dir">
+                                            {dir}
+                                        </div>
+                                    )
+                                }
+                            });
+                        }
+                }
+            }
+            if(input.userInput){
+                prevInputJSX = (
+                    <div className="terminalOutput">
                         <div className="user">anthonysteel</div>
                         <div className="computer">@website-2017</div>
                         <div className="colon">:</div>
-                        <div className="path">{this.props.directory.join('/')}</div>
+                        <div className="path">{input.path.join('/')}
+                        </div>
                         <div className="dollarsign">$</div>
-                        <div className="textInput">{cmd}</div>
+                        <div className="textInput">
+                            {input.userInput}
+                        </div>
                     </div>
                 );
+            } else {
+                prevInputJSX = (<div></div>)
             }
-        );
-
-        const output = this.subDirArr().map(dir => {
-            if(this.props.history[this.props.history.length-1] === 'ls'){
-                if(dir.includes('.txt')){
-                    return (
-                        <div className="file">
-                            {dir}
-                        </div>
-                    )
-                } else {
-                    return (
-                        <div className="directory">
-                            {dir} 
-                        </div>
-                    )
-                }
-            }
-        })
-
-
-        return(
-            <div>
-                {history} 
-                <div className="terminalOutput">
-                    {output}
+            return (
+                <div>
+                        {prevInputJSX}
+                    <div className="terminalOutput">
+                        {prevOutputJSX} 
+                    </div>
                 </div>
-                <div className="terminal">
+            )
+        });
+
+        return (
+            <div>
+                {prevLinesJSX}
+                <div className="terminalOutput">
                     <div className="user">anthonysteel</div>
                     <div className="computer">@website-2017</div>
                     <div className="colon">:</div>
-                    <div className="path">{this.props.directory.join('/')}</div>
+                    <div className="path">{this.props.path.join('/')}</div>
                     <div className="dollarsign">$</div>
                     <input 
                         className="textInput"
@@ -126,19 +255,18 @@ class Terminal extends React.Component{
     }
 }
 
+
 function mapStateToProps(state){
     return {
-        history: state.terminal.history,
-        directoryTree: state.terminal.directoryTree,
-        directory: state.terminal.directory
+       path: state.terminal.path,
+       dirTree: state.terminal.dirTree,
+       prevInputs: state.terminal.prevInputs
     };
 }
 
 function mapDispatchToProps(dispatch){
     return bindActionCreators({
-        ls,
-        cd,
-        clear
+        input
     }, dispatch);
 }
 
