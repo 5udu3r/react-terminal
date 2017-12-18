@@ -119,15 +119,18 @@ function switchDirs(dirs, newState, currInput){
 
 function terminalReducer(state = blankLine, action){
     const userInput = action.userInput;
+    const dirTree   = state.dirTree;
     const cmd       = action.cmd;
     const flgs      = action.flgs; 
     const dir       = action.dir; 
     const err       = action.err;
+
     var newState    = {...state};
 
 
     const currInput = [{
                 userInput,
+                dirTree,
                 cmd,
                 flgs,
                 dir,
@@ -135,17 +138,17 @@ function terminalReducer(state = blankLine, action){
                 path: newState.path
             }]
 
-    const changePathOrDirTree = {
+    const changeState = {
         cd: true,
-        ls: false,
-        clear: false
+        clear: true,
+        ls: false
     }
 
 
     if(action.type === "COMMAND"){
       // Check if there are errors or if it doesn't alter the state. If true,
       // add command to previous input to be handled by render in terminal.js
-      if(!err && changePathOrDirTree[cmd]){
+      if(!err && changeState[cmd]){
         switch (cmd) {
           case "cd":
             if(flgs[0] === undefined){
@@ -162,16 +165,16 @@ function terminalReducer(state = blankLine, action){
                 }
               }
             }
+            break;
           case "clear":
             newState = {
                 ...newState,
-                prevInput: []
+                prevInputs: []
             }
-          case "rm":
-            if(flgs[0] === undefined){
-            }
+            return newState
+
         }
-      }           
+      }
     }
 
     newState = {
