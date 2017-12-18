@@ -127,8 +127,7 @@ function terminalReducer(state = blankLine, action){
 
     var newState    = {...state};
 
-
-    const currInput = [{
+    const prevInputs = newState.prevInputs.concat([{
                 userInput,
                 dirTree,
                 cmd,
@@ -137,6 +136,7 @@ function terminalReducer(state = blankLine, action){
                 err,
                 path: newState.path
             }]
+        );
 
     const changeState = {
         cd: true,
@@ -151,6 +151,7 @@ function terminalReducer(state = blankLine, action){
       if(!err && changeState[cmd]){
         switch (cmd) {
           case "cd":
+            const currInput = prevInputs[prevInputs.length -1];
             if(flgs[0] === undefined){
               newState = switchDirs(dir, newState, currInput);
             } else { 
@@ -169,7 +170,8 @@ function terminalReducer(state = blankLine, action){
           case "clear":
             newState = {
                 ...newState,
-                prevInputs: []
+                prevInputs: [],
+                history: prevInputs
             }
             return newState
 
@@ -179,8 +181,8 @@ function terminalReducer(state = blankLine, action){
 
     newState = {
         ...newState,
-        history: newState.prevInputs.concat(currInput),
-        prevInputs: newState.prevInputs.concat(currInput)
+        prevInputs,
+        history: prevInputs 
     }
 
     return newState;
