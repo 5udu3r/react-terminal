@@ -17,7 +17,9 @@ class Terminal extends React.Component{
         ls: {
             "-a" : "List all entries including those starting with a dot"
         },
-
+        cat: {
+            undefined: true
+        },
         clear: true
     }
 
@@ -144,14 +146,18 @@ class Terminal extends React.Component{
             historyIndex++;
             e.target.value = ''; // Clear cursor
         }
-        
-        // Use arrow keys to toggle through command history
+        // Use arrow keys to toggle through command history[]
         if (e.keyCode === UP_ARROW) {
-            historyIndex--;
-            e.target.value = this.props.history[historyIndex].userInput;
+            if (historyIndex){
+                e.target.value = this.props.history[historyIndex].userInput;
+                historyIndex--;
+            }
         } else if (e.keyCode === DOWN_ARROW) {
             if(historyIndex === this.props.history.length-1){
                 e.target.value = ''; 
+            } else if (historyIndex+2 != this.props.history.length){
+                historyIndex+=2;
+                e.target.value = this.props.history[historyIndex].userInput;
             } else {
                 historyIndex++;
                 e.target.value = this.props.history[historyIndex].userInput;
@@ -177,6 +183,18 @@ class Terminal extends React.Component{
             }
         })
         return subDirs;
+    }
+
+    getText(path, dir, dirTree){
+        const dirArr = path;
+        let curDirTree = {...dirTree};
+        for(let paths of dirArr)
+        {
+            console.log(paths); 
+            curDirTree = curDirTree[paths];
+        }
+        const text = curDirTree[dir];
+        return text;
     }
 
     render(){
@@ -226,8 +244,19 @@ class Terminal extends React.Component{
                                 }
                             });
                         }
+                        break;
+                    case "cat":
+                        const text = this.getText(input.path, input.dir, input.dirTree)
+                        prevOutputJSX = (
+                            <div className="text">
+                                {text}
+                            </div>
+                        )
+                        break;
+
                 }
             } else {
+                // Handle error creation
                 switch (input.err) {
                     case "NO_CMD":
                         prevOutputJSX = (
