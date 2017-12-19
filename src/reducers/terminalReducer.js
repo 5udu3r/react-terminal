@@ -48,7 +48,7 @@ Queen's University, Canada`
 ===========
 - Build a personal robot that can cook
 
-- Build a fully automated artificial light indoor vertical farm`
+- Build a fully automated, artificial-light, indoor vertical farm`
     }
 }
 
