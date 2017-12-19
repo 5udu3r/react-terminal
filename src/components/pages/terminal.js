@@ -1,5 +1,6 @@
 "use strict"
 import React from 'react';
+import cookie from "react-cookie";
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import {input} from '../../actions/actions';
@@ -35,7 +36,7 @@ class Terminal extends React.Component{
     searchTree(treeToSearch, path){
         let tree = {...treeToSearch};
         let isValidPath = true;
-        path.forEach(elem=> {
+        path.forEach(elem => {
             if(tree[elem] != undefined){
                 tree = tree[elem];
             } else {
@@ -96,30 +97,73 @@ class Terminal extends React.Component{
         
     }
 
+    autoCompleteDir(dir, path){
+        const subDirs = this.subDirs(path);
 
+        var autoCompleteArr = []
+        for(let elem of subDirs){
+            if(elem.startsWith(dir)){
+                autoCompleteArr.push(elem);
+            }
+        }
+        return autoCompleteArr
+    }
+
+    autoCompleteCmd(cmd){
+        const cmdTree = {...this.cmdTree};
+        const reducedCmdTree = Object.keys(cmdTree).filter(k =>{
+            return k.startsWith(cmd);
+        })
+        return reducedCmdTree;
+    }
 
     handleSubmit(e){
         const ENTER = 13;
         const UP_ARROW = 38;
         const DOWN_ARROW = 40;
+        const TAB = 9;
+
+        const userInput = e.target.value;
+        const userInputArr = userInput.split(' ');
+        // A user input line contains a command (cmd) and an argument (arg)
+        // seperated by a space
+        const cmd = userInputArr[0];
+        const arg = userInputArr.slice(1, userInputArr.length);
+
+        // The argument contains flags (flgs) and a target directory (dir).
+
+        // Parse arg into flgs and dir
+        const parsedArg = this.parseArg(arg);
+
+        const flgs = parsedArg.flgs;
+        const dir  = parsedArg.dir;
+
+        // Autocoomplete
+        if (e.keyCode === TAB) {
+            e.preventDefault();
+            console.log(this.path);
+            const cmdComplete = this.autoCompleteCmd(cmd);
+            const dirComplete = this.autoCompleteDir(dir, this.props.path);
+            // const cmdComplete = this.autoComplete(cmd, this.cmdList);
+
+            console.log(cmdComplete.length);
+            if(cmdComplete.length > 1){
+                console.log(cmdComplete);
+            } else {
+                e.target.value = cmdComplete[0];
+            }
+           
+            if(dirComplete.length > 1){
+                console.log(dirComplete);
+            } else {
+                e.target.value = cmd + ' ' + dirComplete[0];
+            }
+
+
+        }
 
         if (e.keyCode === ENTER)
         {
-            const userInput = e.target.value;
-            const userInputArr = userInput.split(' ');
-            // A user input line contains a command (cmd) and an argument (arg)
-            // seperated by a space
-            const cmd = userInputArr[0];
-            const arg = userInputArr.slice(1, userInputArr.length);
-
-            // The argument contains flags (flgs) and a target directory (dir).
-
-            // Parse arg into flgs and dir
-            const parsedArg = this.parseArg(arg);
-
-            const flgs = parsedArg.flgs;
-            const dir  = parsedArg.dir;
-
             // Check if there is an error in the command
             var err;
 
@@ -129,7 +173,7 @@ class Terminal extends React.Component{
                     this.checkDir(dir)
                 ){
 
-                    this.props.input(userInput, cmd, flgs, dir, false);
+                   this.props.input(userInput, cmd, flgs, dir, false);
 
                 } else if(!this.checkCmd(cmd)) {
 
@@ -198,6 +242,7 @@ class Terminal extends React.Component{
     }
 
     render(){
+        const year = (new Date()).getFullYear()
         let prevLinesJSX;
         prevLinesJSX = this.props.prevInputs.map(input => {
             let prevInputJSX;
@@ -253,7 +298,6 @@ class Terminal extends React.Component{
                             </div>
                         )
                         break;
-
                 }
             } else {
                 // Handle error creation
@@ -287,7 +331,7 @@ class Terminal extends React.Component{
                 prevInputJSX = (
                     <div className="terminalOutput">
                         <div className="user">anthonysteel</div>
-                        <div className="computer">@website-2017</div>
+                        <div className="computer">@website-{year}</div>
                         <div className="colon">:</div>
                         <div className="path">{input.path.join('/')}
                         </div>
@@ -315,7 +359,7 @@ class Terminal extends React.Component{
                 {prevLinesJSX}
                 <div className="terminalOutput">
                     <div className="user">anthonysteel</div>
-                    <div className="computer">@website-2017</div>
+                    <div className="computer">@website-{year}</div>
                     <div className="colon">:</div>
                     <div className="path">{this.props.path.join('/')}</div>
                     <div className="dollarsign">$</div>
@@ -324,7 +368,9 @@ class Terminal extends React.Component{
                         type="text"
                         autoComplete="off"
                         onKeyDown={(e)=>this.handleSubmit(e)} 
-                        autoFocus>
+                        autoFocus
+                        spellCheck="false"
+                        >
                     </input>
                 </div>
             </div>
